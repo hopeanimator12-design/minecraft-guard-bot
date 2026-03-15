@@ -5,7 +5,7 @@ const OWNER = ".WateryDuck7656"
 const bot = bedrock.createClient({
   host: "AsotaTheCat.aternos.me",
   port: 11362,
-  username: "GuardBot",
+  username: "Prabowo_Sawit",
   offline: true
 })
 
