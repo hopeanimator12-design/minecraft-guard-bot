@@ -4,6 +4,8 @@ const OWNER = ".WateryDuck7656"
 const HOST = "AsotaTheCat.aternos.me"
 const PORT = 11362
 
+let followOwner = true
+
 function startBot(){
 
 const bot = bedrock.createClient({
@@ -16,7 +18,7 @@ offline: true
 console.log("Bot cuba masuk server...")
 
 bot.on("join", () => {
-console.log("Bot berjaya masuk server dan menjaga owner!")
+console.log("Prabowo_Sawit sudah masuk server!")
 })
 
 bot.on("add_entity", (entity) => {
@@ -26,32 +28,57 @@ if(!entity) return
 const name = entity.username || ""
 const type = entity.entity_type || ""
 
-if(name === OWNER) return
-
-// serang player lain
-if(name && name !== OWNER){
-attack(bot, entity.runtime_id)
-console.log("Serang player:", name)
+if(name === OWNER){
+if(followOwner){
+console.log("Owner dijumpai, bot akan ikut.")
+}
+return
 }
 
-// serang mob jahat
+if(name && name !== OWNER){
+console.log("Serang player:", name)
+attack(bot,entity.runtime_id)
+}
+
 if(
 type.includes("zombie") ||
 type.includes("skeleton") ||
 type.includes("creeper")
 ){
-attack(bot, entity.runtime_id)
-console.log("Serang mob:", type)
+console.log("Serang mob:",type)
+attack(bot,entity.runtime_id)
+}
+
+})
+
+bot.on("text",(packet)=>{
+
+const msg = packet.message
+
+if(!msg) return
+
+if(msg === "!follow"){
+followOwner = true
+console.log("Bot ikut owner")
+}
+
+if(msg === "!stay"){
+followOwner = false
+console.log("Bot berhenti ikut")
+}
+
+if(msg === "!attack"){
+console.log("Mode attack aktif")
 }
 
 })
 
 bot.on("disconnect", () => {
-console.log("Server tutup. Bot cuba masuk semula dalam 5 saat...")
+console.log("Server offline. Cuba masuk lagi dalam 5 saat...")
 setTimeout(startBot,5000)
 })
 
-bot.on("error", () => {})
+bot.on("error",()=>{})
 
 }
 
