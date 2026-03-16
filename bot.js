@@ -15,38 +15,63 @@ username: "Prabowo_Sawit",
 offline: true
 })
 
-console.log("Bot cuba masuk server...")
+console.log("Bot cuba connect...")
 
 bot.on("join", () => {
-console.log("Prabowo_Sawit sudah masuk server!")
+
+console.log("Prabowo_Sawit masuk server!")
+
+// anti AFK movement
+setInterval(() => {
+
+bot.queue("player_auth_input",{
+pitch:0,
+yaw:Math.random()*360,
+position:{x:0,y:0,z:0},
+move_vector:{x:0,z:0},
+head_yaw:Math.random()*360,
+input_data:[],
+input_mode:1,
+play_mode:0,
+tick:0
 })
 
-bot.on("add_entity", (entity) => {
+console.log("Anti AFK bergerak")
+
+},30000)
+
+})
+
+bot.on("add_entity",(entity)=>{
 
 if(!entity) return
 
 const name = entity.username || ""
 const type = entity.entity_type || ""
 
-if(name === OWNER){
-if(followOwner){
-console.log("Owner dijumpai, bot akan ikut.")
-}
-return
-}
+// ignore owner
+if(name === OWNER) return
 
+// attack player lain
 if(name && name !== OWNER){
-console.log("Serang player:", name)
+
+console.log("Serang player:",name)
+
 attack(bot,entity.runtime_id)
+
 }
 
+// attack mob jahat
 if(
 type.includes("zombie") ||
 type.includes("skeleton") ||
 type.includes("creeper")
 ){
+
 console.log("Serang mob:",type)
+
 attack(bot,entity.runtime_id)
+
 }
 
 })
@@ -58,45 +83,12 @@ const msg = packet.message
 if(!msg) return
 
 if(msg === "!follow"){
+
 followOwner = true
-console.log("Bot ikut owner")
+console.log("Mode follow aktif")
+
 }
 
 if(msg === "!stay"){
-followOwner = false
-console.log("Bot berhenti ikut")
-}
 
-if(msg === "!attack"){
-console.log("Mode attack aktif")
-}
-
-})
-
-bot.on("disconnect", () => {
-console.log("Server offline. Cuba masuk lagi dalam 5 saat...")
-setTimeout(startBot,5000)
-})
-
-bot.on("error",()=>{})
-
-}
-
-function attack(bot,id){
-
-try{
-
-bot.queue("inventory_transaction",{
-transaction:{
-legacy:{legacy_request_id:0},
-transaction_type:"item_use_on_entity",
-entity_runtime_id:id,
-action_type:"attack"
-}
-})
-
-}catch(e){}
-
-}
-
-startBot()
+followOwner =
