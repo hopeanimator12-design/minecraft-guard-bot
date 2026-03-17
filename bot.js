@@ -1,26 +1,60 @@
-// Ganti bahagian setInterval anda dengan ini
-setInterval(() => {
-  // Pastikan bot sudah spawn sebelum hantar paket
-  if (!bot.entity || !bot.entity.position) return;
+const { createClient } = require('bedrock-protocol');
 
-  try {
-    bot.queue('player_auth_input', {
-      pitch: 0,
-      yaw: 0,
-      position: bot.entity.position,
-      move_vector: { x: 0, z: 0.1 }, // Gerak sikit ke depan
-      head_yaw: 0,
-      input_data: {
-        _value: 0,
-        forward: true // Data input yang betul
-      },
-      input_mode: 'mouse',
-      play_mode: 'normal',
-      interaction_model: 'touch',
-      tick: BigInt(0),
-      delta: { x: 0, y: 0, z: 0 }
-    });
-  } catch (e) {
-    console.log("Gagal hantar paket pergerakan:", e.message);
-  }
-}, 10000); // Buat setiap 10 saat (jangan terlalu kerap untuk elak lag/kick)
+const CONFIG = {
+  host: 'AsotaTheCat.aternos.me',
+  port: 11362,
+  username: 'Prabowo_Sawit',
+  version: '1.20.60' // guna version betul
+};
+
+let bot;
+
+function startBot() {
+  console.log('Starting bot...');
+
+  bot = createClient(CONFIG);
+
+  // Bila dah masuk world
+  bot.on('spawn', () => {
+    console.log('✅ Bot masuk server!');
+
+    // Anti AFK movement
+    setInterval(() => {
+      if (!bot.entity || !bot.entity.position) return;
+
+      try {
+        bot.queue('player_auth_input', {
+          pitch: 0,
+          yaw: Math.random() * 360,
+          position: bot.entity.position,
+          moveVector: { x: 0, z: 0.2 },
+          headYaw: 0,
+          inputData: {
+            forward: true,
+            jumping: Math.random() > 0.8
+          }
+        });
+      } catch (e) {
+        console.log("Movement error:", e.message);
+      }
+    }, 5000);
+  });
+
+  // Log chat
+  bot.on('text', (packet) => {
+    console.log('CHAT:', packet.message);
+  });
+
+  // Auto reconnect (24 jam)
+  bot.on('disconnect', () => {
+    console.log('❌ Disconnect! Reconnecting 5s...');
+    setTimeout(startBot, 5000);
+  });
+
+  bot.on('error', (err) => {
+    console.log('Error:', err.message);
+  });
+}
+
+// Start pertama kali
+startBot();
