@@ -4,7 +4,7 @@ const CONFIG = {
   host: 'AsotaTheCat.aternos.me',
   port: 11362,
   username: 'Prabowo_Sawit',
-  version: '1.21.0' // Pastikan version ni betul dengan server
+  version: '1.26.0' // Pastikan version ni betul dengan server
 };
 
 const OWNER = 'WateryDuck7656';
