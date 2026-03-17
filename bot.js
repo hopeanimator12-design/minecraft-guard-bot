@@ -4,57 +4,45 @@ const CONFIG = {
   host: 'AsotaTheCat.aternos.me',
   port: 11362,
   username: 'Prabowo_Sawit',
-  version: '1.26.0' // guna version betul
+  version: '1.21.0' // Pastikan version ni betul dengan server
 };
 
+const OWNER = 'WateryDuck7656';
 let bot;
 
 function startBot() {
-  console.log('Starting bot...');
-
   bot = createClient(CONFIG);
 
-  // Bila dah masuk world
   bot.on('spawn', () => {
-    console.log('✅ Bot masuk server!');
-
-    // Anti AFK movement
+    console.log('✅ Bot sedia untuk berkhidmat!');
+    
+    // Loop untuk check sekeliling setiap 1 saat
     setInterval(() => {
-      if (!bot.entity || !bot.entity.position) return;
-
-      try {
-        bot.queue('player_auth_input', {
-          pitch: 0,
-          yaw: Math.random() * 360,
-          position: bot.entity.position,
-          moveVector: { x: 0, z: 0.2 },
-          headYaw: 0,
-          inputData: {
-            forward: true,
-            jumping: Math.random() > 0.8
-          }
-        });
-      } catch (e) {
-        console.log("Movement error:", e.message);
-      }
-    }, 5000);
+      attackNearby();
+    }, 1000);
   });
 
-  // Log chat
-  bot.on('text', (packet) => {
-    console.log('CHAT:', packet.message);
-  });
+  // Fungsi Pukul Mob & Player (Kecuali Owner)
+  function attackNearby() {
+    // Nota: bedrock-protocol perlukan anda simpan data entity sendiri 
+    // daripada packet 'add_player' atau 'add_entity'
+    // Ini adalah contoh logic cara hantar packet pukul:
+    
+    /* 
+    bot.queue('inventory_transaction', {
+      transaction_type: 'item_use_on_entity',
+      action_type: 'attack',
+      runtime_entity_id: targetID, // ID mob/player
+      // ... data lain
+    });
+    */
+  }
 
-  // Auto reconnect (24 jam)
-  bot.on('disconnect', () => {
-    console.log('❌ Disconnect! Reconnecting 5s...');
-    setTimeout(startBot, 5000);
-  });
-
-  bot.on('error', (err) => {
-    console.log('Error:', err.message);
-  });
+  // Fungsi Cari Katil (Perlu scan chunk data)
+  // Sangat berat untuk bedrock-protocol biasa tanpa plugin tambahan
+  
+  bot.on('error', (err) => console.log('Error:', err));
+  bot.on('close', () => setTimeout(startBot, 5000));
 }
 
-// Start pertama kali
 startBot();
