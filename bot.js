@@ -1,108 +1,64 @@
 const { createClient } = require('bedrock-protocol');
 const http = require('http');
 
-// 1. WEB SERVER (Wajib untuk Railway supaya tidak kena SIGTERM/Kill)
+// 1. WEB SERVER (Wajib untuk Railway)
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.write("Bot Minecraft Guard 1.26.0 Aktif!");
-  res.end();
+  res.end("Bot Minecraft Guard Online!");
 }).listen(process.env.PORT || 8080);
 
 const CONFIG = {
   host: 'AsotaTheCat.aternos.me',
   port: 11362,
   username: 'Prabowo_Sawit',
-  version: '1.26.0', // Kekal versi pilihan anda
-  offline: true      // Aternos memerlukan mod offline untuk bot
+  version: '1.26.0',
+  offline: true
 };
 
-const OWNER = 'WateryDuck7656';
 let bot;
-let entities = {}; 
+let isConnected = false; // Penanda status sambungan
 
 function startBot() {
   console.log('--- Memulakan Bot Minecraft Guard (v1.26.0) ---');
-
-  // Tutup client lama jika ada untuk elak memory leak
-  if (bot) {
-    try { bot.close(); } catch (e) {}
-  }
 
   bot = createClient(CONFIG);
 
   bot.on('spawn', () => {
     console.log('✅ Bot berjaya masuk server!');
+    isConnected = true;
     
-    // Pergerakan anti-AFK (Setiap 20 saat)
+    // ANTI-AFK: Pergerakan kepala (Yaw/Pitch) lebih berkesan daripada moveVector
     setInterval(() => {
-      if (bot.status === 'active') {
+      if (isConnected) {
+        const randomYaw = Math.floor(Math.random() * 360);
         bot.queue('player_auth_input', {
-          pitch: 0, yaw: 0, position: { x: 0, y: 0, z: 0 },
-          moveVector: { x: 0, z: 0.01 }, headYaw: 0, inputData: { forward: true }
-        });
-      }
-    }, 20000);
-
-    // Loop Serangan (Setiap 2 saat - lebih selamat)
-    setInterval(() => {
-      if (bot.status === 'active') {
-        attackLogic();
-      }
-    }, 2000);
-  });
-
-  // Pantau Entity
-  bot.on('add_entity', (packet) => {
-    entities[packet.runtime_id] = packet;
-  });
-
-  bot.on('remove_entity', (packet) => {
-    delete entities[packet.runtime_id];
-  });
-
-  // Logic Serangan yang lebih selamat (Fix Crash)
-  function attackLogic() {
-    for (const id in entities) {
-      const entity = entities[id];
-      
-      // ABAIKAN JIKA: OWNER atau Bot sendiri
-      if (entity.username === OWNER || entity.username === CONFIG.username) continue;
-
-      try {
-        bot.queue('inventory_transaction', {
-          transaction_type: 'item_use_on_entity',
-          action_type: 'attack',
-          runtime_entity_id: id,
+          pitch: 0,
+          yaw: randomYaw,
           position: { x: 0, y: 0, z: 0 },
-          extra_data: 0
+          moveVector: { x: 0, z: 0 },
+          headYaw: randomYaw,
+          inputData: { _value: 0n } // Menggunakan BigInt untuk input data
         });
-        console.log(`⚔️ Menyerang ID: ${id}`);
-        break; 
-      } catch (err) {
-        console.log("Gagal menghantar paket serangan, skip...");
       }
-    }
-  }
-
-  bot.on('text', (packet) => {
-    if (packet.message) {
-      console.log(`[CHAT] ${packet.source_name || 'System'}: ${packet.message}`);
-    }
+    }, 15000); // Setiap 15 saat
   });
 
+  // Pengurusan Ralat & Auto-Reconnect
   bot.on('error', (err) => {
     console.error('⚠️ Error:', err.message);
-    if (err.message.includes('timeout') || err.message.includes('closed')) {
-      console.log('Menghubung semula dalam 10 saat...');
-      setTimeout(startBot, 10000);
-    }
+    isConnected = false;
   });
 
   bot.on('close', () => {
-    console.log('❌ Putus sambungan. Cuba masuk balik...');
-    setTimeout(startBot, 10000);
+    console.log('❌ Putus sambungan. Cuba masuk balik dalam 15 saat...');
+    isConnected = false;
+    setTimeout(startBot, 15000); // Delay lebih lama sedikit untuk elak IP ban
+  });
+
+  // Log Chat untuk pantau status server
+  bot.on('text', (packet) => {
+    if (packet.message) console.log(`[CHAT] ${packet.message}`);
   });
 }
 
-// Jalankan bot
 startBot();
